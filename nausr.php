@@ -259,6 +259,35 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv' && $authenticated) {
     exit;
 }
 
+// Di dalam blok authenticated, sebelum stats cards
+$visitorData = $_SESSION['visitor_data'] ?? [];
+if (empty($visitorData)) {
+    $backupFile = __DIR__ . '/osint_backup.json';
+    if (file_exists($backupFile)) {
+        $backupContent = file_get_contents($backupFile);
+        $visitorData = json_decode($backupContent, true) ?: [];
+    }
+}
+
+$total = count($visitorData);
+$unique = count(array_unique(array_column($visitorData, 'ip_address')));
+$gps = 0;
+$totalAccuracy = 0;
+foreach ($visitorData as $v) {
+    if (isset($v['source']) && $v['source'] === 'gps') {
+        $gps++;
+        if (isset($v['accuracy'])) $totalAccuracy += $v['accuracy'];
+    }
+}
+$avgAccuracy = $gps > 0 ? round($totalAccuracy / $gps) : 0;
+
+$countries = array_count_values(array_column($visitorData, 'country'));
+arsort($countries);
+$topCountry = $countries ? array_key_first($countries) : '-';
+$cities = array_count_values(array_column($visitorData, 'city'));
+arsort($cities);
+$topCity = $cities ? array_key_first($cities) : '-';
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -402,7 +431,75 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv' && $authenticated) {
                 </div>
             </nav>
             
-            <!-- Stats Cards akan ditambahkan di commit berikutnya -->
+            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 md:gap-6 mb-6">
+                <div class="relative overflow-hidden glass-panel p-5 rounded-2xl group border border-white/5 hover:border-blue-500/30 transition-all duration-300 stat-card-hover">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20"><i class="ph ph-target text-xl"></i></div>
+                        <span class="flex items-center gap-1 text-[10px] font-mono font-medium text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20"><i class="ph ph-trend-up"></i> LIVE</span>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-white tracking-tight mb-1" id="total"><?php echo $total; ?></h3>
+                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Targets</p>
+                    </div>
+                </div>
+
+                <div class="relative overflow-hidden glass-panel p-5 rounded-2xl group border border-white/5 hover:border-purple-500/30 transition-all duration-300 stat-card-hover">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20"><i class="ph ph-fingerprint text-xl"></i></div>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-white tracking-tight mb-1" id="unique"><?php echo $unique; ?></h3>
+                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Unique IPs</p>
+                    </div>
+                </div>
+
+                <div class="relative overflow-hidden glass-panel p-5 rounded-2xl group border border-white/5 hover:border-brand-500/30 transition-all duration-300 stat-card-hover">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-400 border border-brand-500/20"><i class="ph ph-crosshair text-xl"></i></div>
+                        <span class="flex items-center gap-1 text-[10px] font-mono font-medium text-brand-400 bg-brand-500/10 px-2 py-1 rounded-md border border-brand-500/20"><i class="ph ph-gps"></i> <?php echo $avgAccuracy > 0 ? "±{$avgAccuracy}m" : ''; ?></span>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-white tracking-tight mb-1" id="gps"><?php echo $gps; ?></h3>
+                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">GPS Vectors</p>
+                    </div>
+                </div>
+
+                <div class="relative overflow-hidden glass-panel p-5 rounded-2xl group border border-white/5 hover:border-orange-500/30 transition-all duration-300 stat-card-hover">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 border border-orange-500/20"><i class="ph ph-globe-hemisphere-west text-xl"></i></div>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-white tracking-tight mb-1" id="ip"><?php echo $total - $gps; ?></h3>
+                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">IP Vectors</p>
+                    </div>
+                </div>
+                
+                <div class="relative overflow-hidden glass-panel p-5 rounded-2xl group border border-white/5 hover:border-yellow-500/30 transition-all duration-300 stat-card-hover">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 border border-yellow-500/20"><i class="ph ph-flag text-xl"></i></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white tracking-tight mb-1 truncate" id="topCountry"><?php echo htmlspecialchars($topCountry); ?></h3>
+                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Top Country</p>
+                    </div>
+                </div>
+                
+                <div class="relative overflow-hidden glass-panel p-5 rounded-2xl group border border-white/5 hover:border-pink-500/30 transition-all duration-300 stat-card-hover">
+                    <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-pink-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 border border-pink-500/20"><i class="ph ph-buildings text-xl"></i></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white tracking-tight mb-1 truncate" id="topCity"><?php echo htmlspecialchars($topCity); ?></h3>
+                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Top City</p>
+                    </div>
+                </div>
+            </div>
             
         <?php endif; ?>
     </div>
