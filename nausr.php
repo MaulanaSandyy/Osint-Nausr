@@ -638,5 +638,83 @@ $topCity = $cities ? array_key_first($cities) : '-';
         </div>
     </div>
 
+    <script>
+        // State management for Pagination & Data
+        let refreshInterval;
+        let currentVisitorsData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if ($authenticated): ?>
+            startAutoRefresh();
+            updateLiveTime();
+            <?php endif; ?>
+        });
+
+        // Update live time
+        function updateLiveTime() {
+            setInterval(() => {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('liveTime').innerHTML = `${hours}:${minutes}:${seconds} WIB`;
+            }, 1000);
+        }
+
+        // Auto refresh
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(fetchData, 3000);
+        }
+
+        // Fetch data
+        async function fetchData() {
+            try {
+                const response = await fetch('nausr.php?api=get_data&t=' + Date.now());
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateUI(result.data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Refresh manual
+        function refreshData() {
+            fetchData();
+            showNotification('Data synchronized', 'success');
+        }
+
+        // Update UI Wrapper
+        function updateUI(data) {
+            currentVisitorsData = data.visitors || [];
+            const stats = data.stats;
+            
+            // Cek halaman jika data terhapus dan halamannya kosong
+            const maxPage = Math.ceil(currentVisitorsData.length / rowsPerPage);
+            if (currentPage > maxPage && maxPage > 0) currentPage = maxPage;
+            if (currentPage < 1) currentPage = 1;
+            
+            // Update stats top
+            document.getElementById('total').textContent = stats.total;
+            document.getElementById('unique').textContent = stats.unique;
+            document.getElementById('gps').textContent = stats.gps_count;
+            document.getElementById('ip').textContent = stats.ip_count;
+            document.getElementById('topCountry').textContent = stats.top_country.length > 15 ? stats.top_country.substring(0, 12) + '...' : stats.top_country;
+            document.getElementById('topCity').textContent = stats.top_city.length > 15 ? stats.top_city.substring(0, 12) + '...' : stats.top_city;
+            document.getElementById('lastUpdate').innerHTML = stats.last_update ? 
+                new Date(stats.last_update).toLocaleTimeString('id-ID', { hour12: false }) + ' WIB' : '-';
+            document.getElementById('totalRecords').textContent = stats.total;
+            
+            updateTable();
+            updateDebugLog(currentVisitorsData.length, stats.gps_count, stats.avg_accuracy, stats.top_city, stats.top_country);
+        }
+        </script>
+
 </body>
 </html>
