@@ -78,6 +78,34 @@ function writeLog($message, $data = null) {
 
 writeLog("nausr.php accessed from " . $_SERVER['REMOTE_ADDR']);
 
+// Cek autentikasi
+$authenticated = false;
+$error = '';
+
+if (isset($_SESSION['tracking_auth']) && $_SESSION['tracking_auth'] === true) {
+    $authenticated = true;
+}
+
+// Proses login
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
+    if ($_POST['password'] === ACCESS_PASSWORD) {
+        $_SESSION['tracking_auth'] = true;
+        $authenticated = true;
+        writeLog("Login successful from " . $_SERVER['REMOTE_ADDR']);
+    } else {
+        $error = 'Password salah!';
+        writeLog("Login failed from " . $_SERVER['REMOTE_ADDR']);
+    }
+}
+
+// Logout
+if (isset($_GET['logout'])) {
+    unset($_SESSION['tracking_auth']);
+    session_destroy();
+    header('Location: nausr.php');
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -87,5 +115,10 @@ writeLog("nausr.php accessed from " . $_SERVER['REMOTE_ADDR']);
     <title>OSINT Dashboard Premium</title>
 </head>
 <body>
+    <?php if (!$authenticated): ?>
+        <div>Login Form</div>
+    <?php else: ?>
+        <div>Dashboard</div>
+    <?php endif; ?>
 </body>
 </html>
