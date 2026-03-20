@@ -361,7 +361,49 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv' && $authenticated) {
                 </div>
             </div>
         <?php else: ?>
-            <div>Dashboard Content</div>
+            <nav class="glass-panel px-6 py-4 rounded-2xl flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border border-white/5 shadow-lg relative overflow-hidden z-20">
+                <div class="absolute top-0 left-0 w-1 h-full bg-brand-500 shadow-[0_0_10px_#10b981]"></div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-brand-500/10 border border-brand-500/20 text-brand-400 rounded-xl flex items-center justify-center relative">
+                        <i class="ph ph-radar text-xl animate-[spin_4s_linear_infinite]"></i>
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500 border-2 border-dark-900"></span>
+                        </span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                            OSINT Tracker <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-slate-300 border border-white/5 uppercase">Pro</span>
+                        </h1>
+                        <div class="text-xs text-slate-400 mt-0.5 font-mono flex items-center gap-2">
+                            <span>Session: <span class="text-brand-400"><?php echo substr(session_id(), 0, 8); ?>...</span></span>
+                            <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
+                            <span><i class="ph ph-clock"></i> <span id="liveTime"><?php echo date('H:i:s'); ?> WIB</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-dark-800/50 p-1.5 rounded-xl border border-white/5">
+                    <button onclick="refreshData()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-all text-sm font-medium" title="Force Sync">
+                        <i class="ph ph-arrows-clockwise text-brand-400"></i> Sync Data
+                    </button>
+                    <div class="w-px h-4 bg-white/10 mx-1"></div>
+                    <a href="?export=csv" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-all text-sm font-medium">
+                        <i class="ph ph-download-simple text-blue-400"></i> Export CSV
+                    </a>
+                    <div class="w-px h-4 bg-white/10 mx-1"></div>
+                    <button onclick="resetData()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-all text-sm font-medium">
+                        <i class="ph ph-trash"></i> Reset All
+                    </button>
+                    <div class="w-px h-4 bg-white/10 mx-1"></div>
+                    <a href="?logout=1" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-sm font-medium">
+                        <i class="ph ph-power"></i> Terminate
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Stats Cards akan ditambahkan di commit berikutnya -->
+            
         <?php endif; ?>
     </div>
 </body>
