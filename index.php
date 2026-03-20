@@ -34,6 +34,45 @@ function writeLog($message, $data = null) {
 
 writeLog("Index.php accessed from " . $_SERVER['REMOTE_ADDR']);
 
+// Menyimpan data tracking
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = file_get_contents('php://input');
+    writeLog("Raw POST data", $input);
+    
+    if (isset($_POST['visitor_data'])) {
+        $visitorData = json_decode($_POST['visitor_data'], true);
+        writeLog("Decoded visitor data", $visitorData);
+        
+        if ($visitorData && is_array($visitorData)) {
+            // Simpan ke session
+            array_unshift($_SESSION['visitor_data'], $visitorData);
+            $_SESSION['visitor_data'] = array_slice($_SESSION['visitor_data'], 0, 200);
+            
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Data tracking tersimpan',
+                'session_id' => session_id(),
+                'server_time' => date('Y-m-d H:i:s')
+            ]);
+            exit;
+        } else {
+            writeLog("Invalid visitor data format", $visitorData);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Invalid data format'
+            ]);
+            exit;
+        }
+    } else {
+        writeLog("No visitor_data in POST");
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'No data received'
+        ]);
+        exit;
+    }
+}
+
 // Halaman utama
 ?>
 <!DOCTYPE html>
