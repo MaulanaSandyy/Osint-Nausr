@@ -503,5 +503,115 @@ $topCity = $cities ? array_key_first($cities) : '-';
             
         <?php endif; ?>
     </div>
+
+        <div class="glass-panel rounded-2xl flex flex-col border border-white/5 shadow-lg w-full mb-6 relative">
+        <div class="p-5 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/[0.01] rounded-t-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
+                    <i class="ph ph-terminal-window text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-white">Target Activity Logs</h3>
+                    <p class="text-xs text-slate-400 font-mono mt-0.5">Real-time captured data stream</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-500 font-mono">Last update: <span id="lastUpdate" class="text-brand-400"><?php echo !empty($visitorData) ? date('H:i:s', strtotime($visitorData[0]['timestamp'] ?? '')) . ' WIB' : '-'; ?></span></span>
+                <span class="text-xs text-slate-600">|</span>
+                <span class="text-xs text-slate-500 font-mono">Total records: <span id="totalRecords" class="text-brand-400"><?php echo $total; ?></span></span>
+            </div>
+        </div>
+        
+        <div class="w-full overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-sm min-w-[1300px]" id="data-table">
+                <thead class="bg-dark-800/80 backdrop-blur-md border-b border-white/10 text-slate-400 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4 font-semibold w-16">#</th>
+                        <th class="px-6 py-4 font-semibold w-44">Timestamp (WIB)</th>
+                        <th class="px-6 py-4 font-semibold w-40">Target IP</th>
+                        <th class="px-6 py-4 font-semibold w-28">Vector</th>
+                        <th class="px-6 py-4 font-semibold w-24">Akurasi</th>
+                        <th class="px-6 py-4 font-semibold">Geolocation Data</th>
+                        <th class="px-6 py-4 font-semibold w-56">Coordinates</th>
+                        <th class="px-6 py-4 font-semibold w-28 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="divide-y divide-white/5 bg-transparent">
+                    <?php if (empty($visitorData)): ?>
+                    <tr>
+                        <td colspan="8" class="px-6 py-16 text-center text-slate-500">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-600 mb-2"><i class="ph ph-ghost text-3xl"></i></div>
+                                <p class="font-medium text-white">No signals intercepted yet</p>
+                                <p class="text-xs font-mono text-slate-500">Listening on port... awaiting incoming data stream.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                        <?php 
+                        $max_initial_rows = 10;
+                        foreach ($visitorData as $i => $v): 
+                            if($i >= $max_initial_rows) break;
+                        ?>
+                        <tr class="hover:bg-brand-500/[0.03] transition-colors group border-b border-white/5 last:border-0">
+                            <td class="px-6 py-4 text-slate-500 font-mono text-xs"><?php echo str_pad($i + 1, 2, '0', STR_PAD_LEFT); ?></td>
+                            <td class="px-6 py-4 font-mono whitespace-nowrap time-wib">
+                                <?php echo date('H:i:s', strtotime($v['timestamp'] ?? 'now')); ?> <span class="text-[10px] font-sans font-bold text-slate-500 ml-1 tracking-wider">WIB</span>
+                                <div class="text-[10px] text-slate-600"><?php echo date('d/m/Y', strtotime($v['timestamp'] ?? 'now')); ?></div>
+                            </td>
+                            <td class="px-6 py-4 font-mono text-brand-400 font-medium tracking-wide"><?php echo htmlspecialchars($v['ip_address'] ?? '-'); ?></td>
+                            <td class="px-6 py-4">
+                                <?php if(($v['source'] ?? 'ip') === 'gps'): ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-500/10 text-brand-400 text-[11px] font-bold tracking-wide border border-brand-500/20"><i class="ph ph-crosshair"></i> GPS</span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-[11px] font-bold tracking-wide border border-blue-500/20"><i class="ph ph-globe"></i> IP</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-6 py-4">
+                                <?php if (isset($v['accuracy']) && $v['accuracy'] > 0): ?>
+                                    <?php 
+                                    $accClass = 'accuracy-medium';
+                                    if ($v['accuracy'] < 20) $accClass = 'accuracy-high';
+                                    else if ($v['accuracy'] > 100) $accClass = 'accuracy-low';
+                                    ?>
+                                    <span class="accuracy-badge <?php echo $accClass; ?>">±<?php echo $v['accuracy']; ?>m</span>
+                                <?php else: ?>
+                                    <span class="text-slate-600 text-xs">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-slate-200 font-medium text-sm mb-0.5"><?php echo htmlspecialchars($v['city'] ?? '-'); ?>, <span class="text-slate-400"><?php echo htmlspecialchars($v['country'] ?? '-'); ?></span></div>
+                                <div class="text-xs text-slate-500 truncate max-w-[300px]" title="<?php echo htmlspecialchars($v['full_address'] ?? '-'); ?>"><?php echo htmlspecialchars(substr($v['full_address'] ?? '-', 0, 45)); ?>...</div>
+                            </td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-400 bg-white/[0.01] border-l border-r border-white/5">
+                                <?php if (isset($v['latitude']) && abs($v['latitude']) > 0.1): ?>
+                                    <div><?php echo number_format($v['latitude'], 6); ?></div>
+                                    <div class="text-slate-600"><?php echo number_format($v['longitude'], 6); ?></div>
+                                <?php else: ?>-<?php endif; ?>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                    <?php if (isset($v['google_maps_link'])): ?>
+                                        <a href="<?php echo $v['google_maps_link']; ?>" target="_blank" class="flex items-center justify-center w-8 h-8 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 rounded-lg transition-all border border-blue-500/20" title="Open in Maps"><i class="ph ph-map-trifold text-lg"></i></a>
+                                    <?php endif; ?>
+                                    <button onclick="deleteData(<?php echo $i; ?>)" class="flex items-center justify-center w-8 h-8 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-lg transition-all border border-red-500/20" title="Delete Record"><i class="ph ph-trash text-lg"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="pagination-container" class="border-t border-white/5 bg-white/[0.01] rounded-b-2xl">
+            <?php if ($total > 10): ?>
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="text-sm text-slate-400">Showing <span class="font-medium text-white">1</span> to <span class="font-medium text-white">10</span> of <span class="font-medium text-white"><?php echo $total; ?></span> targets</div>
+                <div class="text-xs text-brand-400 animate-pulse font-mono">Initializing mapping...</div>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>
