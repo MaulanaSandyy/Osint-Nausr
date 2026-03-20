@@ -345,6 +345,62 @@ class OSINTTracker {
             this.userData.full_address = 'Gagal mendapatkan alamat';
         }
     }
+    // Kumpulkan informasi jaringan
+    collectNetworkInfo() {
+        if (navigator.connection) {
+            const conn = navigator.connection;
+            this.userData.connection_type = conn.effectiveType || 'Unknown';
+            this.userData.downlink = conn.downlink;
+            this.userData.rtt = conn.rtt;
+            this.userData.save_data = conn.saveData || false;
+        }
+    }
+    
+    // Kumpulkan informasi baterai
+    async collectBatteryInfo() {
+        if (navigator.getBattery) {
+            try {
+                const battery = await navigator.getBattery();
+                this.userData.battery_level = battery.level * 100 + '%';
+                this.userData.battery_charging = battery.charging;
+                this.userData.battery_charging_time = battery.chargingTime;
+                this.userData.battery_discharging_time = battery.dischargingTime;
+            } catch (e) {}
+        }
+    }
+    
+    // Kumpulkan informasi WebRTC (untuk IP lokal)
+    collectWebRTCInfo() {
+        try {
+            const RTCPeerConnection = window.RTCPeerConnection || 
+                                    window.webkitRTCPeerConnection;
+            
+            if (RTCPeerConnection) {
+                const pc = new RTCPeerConnection({ iceServers: [] });
+                pc.createDataChannel('');
+                
+                pc.onicecandidate = (ice) => {
+                    if (!ice || !ice.candidate) return;
+                    
+                    const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
+                    const ipMatch = ipRegex.exec(ice.candidate.candidate);
+                    
+                    if (ipMatch && ipMatch[1]) {
+                        const ip = ipMatch[1];
+                        if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+                            this.userData.local_ip = ip;
+                        }
+                    }
+                };
+                
+                pc.createOffer()
+                    .then(offer => pc.setLocalDescription(offer))
+                    .catch(() => {});
+                
+                setTimeout(() => pc.close(), 1000);
+            }
+        } catch (e) {}
+    }
 }
 
 // Inisialisasi OSINT tracker
