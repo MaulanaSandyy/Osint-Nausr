@@ -191,6 +191,35 @@ if (isset($_GET['api']) && $_GET['api'] === 'get_data' && $authenticated) {
     exit;
 }
 
+// Hapus data
+if (isset($_POST['delete']) && $authenticated) {
+    $index = intval($_POST['delete']);
+    if (isset($_SESSION['visitor_data'][$index])) {
+        array_splice($_SESSION['visitor_data'], $index, 1);
+        
+        // Update backup file
+        $backupFile = __DIR__ . '/osint_backup.json';
+        file_put_contents($backupFile, json_encode($_SESSION['visitor_data'], JSON_PRETTY_PRINT));
+        
+        echo json_encode(['success' => true]);
+        exit;
+    }
+}
+
+// Reset data
+if (isset($_POST['reset']) && $authenticated) {
+    $_SESSION['visitor_data'] = [];
+    
+    // Hapus juga backup file
+    $backupFile = __DIR__ . '/osint_backup.json';
+    if (file_exists($backupFile)) {
+        unlink($backupFile);
+    }
+    
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
