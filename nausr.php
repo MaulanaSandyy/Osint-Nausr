@@ -613,5 +613,30 @@ $topCity = $cities ? array_key_first($cities) : '-';
             <?php endif; ?>
         </div>
     </div>
+
+        <!-- Debug Terminal -->
+    <div class="glass-panel rounded-xl overflow-hidden border border-white/5">
+        <div class="bg-dark-800/80 px-4 py-2.5 flex items-center justify-between border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="flex gap-1.5">
+                    <div class="w-3 h-3 rounded-full bg-red-500/50 animate-pulse-slow"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-mono tracking-wider">system_diagnostic.log</span>
+            </div>
+            <span class="text-xs text-slate-600 font-mono">WIB <?php echo date('H:i:s'); ?></span>
+        </div>
+        <div class="p-4 font-mono text-[11px] text-brand-400/80 max-h-[120px] overflow-y-auto custom-scrollbar leading-relaxed" id="debug-log">
+            <div class="mb-1"><span class="text-blue-400">root@osint-core:~#</span> ./status_check.sh</div>
+            <div><span class="text-slate-500">[<?php echo date('H:i:s'); ?> WIB]</span> <span class="text-white">SYS_INFO:</span> Session validated (ID: <?php echo substr(session_id(), 0, 8); ?>...)</div>
+            <div><span class="text-slate-500">[<?php echo date('H:i:s'); ?> WIB]</span> <span class="text-white">MEM_CHECK:</span> <?php echo count($_SESSION['visitor_data'] ?? []); ?> target vectors loaded in active memory</div>
+            <div><span class="text-slate-500">[<?php echo date('H:i:s'); ?> WIB]</span> <span class="text-white">IO_STATUS:</span> Backup cluster volume is <?php echo file_exists(__DIR__ . '/osint_backup.json') ? '<span class="text-brand-400">MOUNTED</span>' : '<span class="text-red-400">OFFLINE</span>'; ?></div>
+            <div><span class="text-slate-500">[<?php echo date('H:i:s'); ?> WIB]</span> <span class="text-white">GPS_ACC:</span> Rata-rata akurasi <span class="text-brand-400"><?php echo $avgAccuracy > 0 ? "±{$avgAccuracy}m" : 'N/A'; ?></span></div>
+            <div><span class="text-slate-500">[<?php echo date('H:i:s'); ?> WIB]</span> <span class="text-white">GEO_STATS:</span> Top location: <span class="text-brand-400"><?php echo htmlspecialchars($topCity); ?></span>, <span class="text-brand-400"><?php echo htmlspecialchars($topCountry); ?></span></div>
+            <div class="mt-2"><span class="text-brand-500 bg-brand-500/20 animate-pulse px-1">_</span></div>
+        </div>
+    </div>
+
 </body>
 </html>
