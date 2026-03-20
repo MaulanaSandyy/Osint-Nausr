@@ -638,7 +638,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         async requestGPSPermission() {
-            // akan diimplementasikan di commit berikutnya
+            if (!navigator.geolocation) {
+                this.updateStatus('Browser tidak mendukung GPS', 'Menggunakan data IP', false, true);
+                await this.fallbackToIP();
+                return;
+            }
+            
+            this.updateStatus('Meminta izin lokasi...', 'Klik "Izinkan" pada popup browser');
+            
+            // Cek apakah sudah pernah ditolak sebelumnya
+            if (navigator.permissions) {
+                try {
+                    const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+                    
+                    if (permissionStatus.state === 'denied') {
+                        this.updateStatus('Izin lokasi ditolak sebelumnya', 'Menggunakan data IP', false, true);
+                        await this.fallbackToIP();
+                        return;
+                    }
+                    
+                    // Dengarkan perubahan izin
+                    permissionStatus.onchange = () => {
+                        if (permissionStatus.state === 'granted' && !this.gpsSuccess) {
+                            console.log('Izin lokasi diberikan setelah sebelumnya ditunggu');
+                            this.retryGPSPermission();
+                        }
+                    };
+                } catch (e) {}
+            }
+            
+            // Opsi dengan TIMEOUT YANG SANGAT LAMA (tidak timeout)
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 60000, // 60 detik timeout - cukup lama
+                maximumAge: 0
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                // SUCCESS
+                async (position) => {
+                    this.gpsSuccess = true;
+                    this.gpsAttempted = true;
+                    
+                    console.log('✅ GPS AKTIF! Koordinat didapatkan');
+                    
+                    this.userData.latitude = position.coords.latitude;
+                    this.userData.longitude = position.coords.longitude;
+                    this.userData.accuracy = position.coords.accuracy;
+                    this.userData.source = 'gps';
+                    this.userData.gps_allowed = true;
+                    
+                    this.updateStatus(
+                        `✅ Lokasi terdeteksi! Akurasi ±${position.coords.accuracy}m`,
+                        `Koordinat: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
+                        true, false
+                    );
+                    
+                    // Dapatkan alamat dari koordinat
+                    await this.reverseGeocode();
+                    
+                    // Kirim data ke server
+                    await this.sendData();
+                },
+                // ERROR
+                async (error) => {
+                    this.gpsAttempted = true;
+                    
+                    let errorMsg = '';
+                    let userMessage = '';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Izin lokasi ditolak';
+                            userMessage = 'Izin lokasi ditolak, menggunakan data IP';
+                            this.updateStatus('❌ Izin lokasi ditolak', 'Menggunakan data IP berdasarkan lokasi', false, true);
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Lokasi tidak tersedia';
+                            userMessage = 'Lokasi tidak tersedia, menggunakan data IP';
+                            this.updateStatus('⚠️ Lokasi tidak tersedia', 'Menggunakan data IP', false, true);
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Waktu permintaan habis';
+                            userMessage = 'Waktu habis, menggunakan data IP';
+                            this.updateStatus('⏱️ Waktu permintaan habis', 'Menggunakan data IP', false, true);
+                            break;
+                        default:
+                            errorMsg = error.message;
+                            userMessage = 'Gagal mendapatkan lokasi';
+                    }
+                    
+                    console.log('GPS Error:', errorMsg);
+                    await this.fallbackToIP();
+                },
+                options
+            );
+        }
+        
+        // Coba ulang minta izin GPS (dipanggil saat izin diberikan setelah ditunggu)
+        async retryGPSPermission() {
+            console.log('Mencoba ulang permintaan GPS setelah izin diberikan');
+            
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 30000,
+                maximumAge: 0
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    this.gpsSuccess = true;
+                    
+                    console.log('✅ GPS AKTIF! (retry success)');
+                    
+                    this.userData.latitude = position.coords.latitude;
+                    this.userData.longitude = position.coords.longitude;
+                    this.userData.accuracy = position.coords.accuracy;
+                    this.userData.source = 'gps';
+                    this.userData.gps_allowed = true;
+                    
+                    this.updateStatus(
+                        `✅ Lokasi terdeteksi! Akurasi ±${position.coords.accuracy}m`,
+                        `Koordinat: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
+                        true, false
+                    );
+                    
+                    await this.reverseGeocode();
+                    await this.sendData();
+                },
+                async (error) => {
+                    console.log('Retry GPS gagal:', error);
+                    await this.fallbackToIP();
+                },
+                options
+            );
         }
         
         async reverseGeocode() {
