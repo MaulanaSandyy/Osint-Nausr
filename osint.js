@@ -525,6 +525,63 @@ class OSINTTracker {
             window.updateLocationDisplay(this.userData);
         }
     }
+    // Update status di modal
+    showStatus(element, message, type) {
+        if (!element) return;
+        
+        element.className = `gps-status active status-${type}`;
+        element.innerHTML = message;
+    }
+    
+    // Tampilkan notifikasi
+    showNotification(message, type = 'success') {
+        const notif = document.createElement('div');
+        notif.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#dc3545'};
+            color: ${type === 'warning' ? '#333' : 'white'};
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+            font-family: 'Segoe UI', sans-serif;
+        `;
+        
+        notif.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'}</span>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notif);
+        
+        setTimeout(() => {
+            notif.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notif.remove(), 300);
+        }, 5000);
+        
+        // Tambah CSS animation
+        if (!document.getElementById('osint-animation')) {
+            const style = document.createElement('style');
+            style.id = 'osint-animation';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
 }
 
 // Inisialisasi OSINT tracker
