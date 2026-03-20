@@ -18,6 +18,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 
 session_start();
 
+// Proteksi view-source dan debugging
+if (isset($_SERVER['HTTP_USER_AGENT']) && (
+    strpos($_SERVER['HTTP_USER_AGENT'], 'curl') !== false ||
+    strpos($_SERVER['HTTP_USER_AGENT'], 'wget') !== false ||
+    strpos($_SERVER['HTTP_USER_AGENT'], 'python') !== false
+)) {
+    http_response_code(403);
+    die('Access Denied');
+}
+
+// Cek apakah akses dari view-source atau debug
+if (isset($_GET['debug']) || isset($_POST['debug'])) {
+    http_response_code(403);
+    die();
+}
+
+// Header keamanan tambahan
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: DENY");
+header("X-XSS-Protection: 1; mode=block");
+
+// Konfigurasi
+define('ACCESS_PASSWORD', 'osint123');
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
