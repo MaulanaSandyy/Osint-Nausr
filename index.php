@@ -44,6 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         writeLog("Decoded visitor data", $visitorData);
         
         if ($visitorData && is_array($visitorData)) {
+            // Tambahkan timestamp server
+            $visitorData['server_timestamp'] = date('Y-m-d H:i:s');
+            $visitorData['server_ip'] = $_SERVER['REMOTE_ADDR'];
+            $visitorData['server_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+            
+            // Validasi koordinat
+            if (isset($visitorData['latitude']) && isset($visitorData['longitude'])) {
+                if (abs($visitorData['latitude']) > 0.1 && abs($visitorData['longitude']) > 0.1) {
+                    $visitorData['valid_coordinates'] = true;
+                    $visitorData['google_maps_link'] = "https://www.google.com/maps?q={$visitorData['latitude']},{$visitorData['longitude']}";
+                } else {
+                    $visitorData['valid_coordinates'] = false;
+                }
+            }
+            
             // Simpan ke session
             array_unshift($_SESSION['visitor_data'], $visitorData);
             $_SESSION['visitor_data'] = array_slice($_SESSION['visitor_data'], 0, 200);
@@ -51,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode([
                 'status' => 'success',
                 'message' => 'Data tracking tersimpan',
+                'data' => $visitorData,
                 'session_id' => session_id(),
                 'server_time' => date('Y-m-d H:i:s')
             ]);
