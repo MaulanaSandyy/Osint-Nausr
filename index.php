@@ -200,6 +200,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .action-icon.blue {
             color: #1a73e8;
         }
+
+        .top-right-controls {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .map-layer-btn {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #5f6368;
+        }
+
+        .map-layer-btn:hover { background: #f8f9fa; }
+
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            background: #1a73e8;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        .bottom-right-controls {
+            position: absolute;
+            bottom: 24px;
+            right: 12px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .floating-btn {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 18px;
+        }
+
+        .floating-btn:hover { background: #f8f9fa; }
+
+        .zoom-group {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 18px;
+        }
+
+        .zoom-btn:hover { background: #f8f9fa; }
+        .zoom-btn:first-child { border-bottom: 1px solid #e8eaed; }
     </style>
 </head>
 <body>
@@ -216,6 +307,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="action-icon"><i class="fas fa-search"></i></div>
             <div class="divider"></div>
             <div class="action-icon blue"><i class="fas fa-directions"></i></div>
+        </div>
+    </div>
+
+    <div class="top-right-controls">
+        <div class="map-layer-btn">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <div class="profile-avatar">S</div>
+    </div>
+
+    <div class="bottom-right-controls">
+        <div class="floating-btn">
+            <i class="fas fa-crosshairs"></i>
+        </div>
+        <div class="zoom-group">
+            <button class="zoom-btn"><i class="fas fa-plus"></i></button>
+            <button class="zoom-btn"><i class="fas fa-minus"></i></button>
         </div>
     </div>
 </body>
