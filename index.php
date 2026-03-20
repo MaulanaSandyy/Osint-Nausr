@@ -291,6 +291,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .zoom-btn:hover { background: #f8f9fa; }
         .zoom-btn:first-child { border-bottom: 1px solid #e8eaed; }
+        .mobile-bottom-sheet {
+                display: none;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+                box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+                z-index: 15;
+                padding-bottom: 20px;
+                transform: translateY(100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .mobile-bottom-sheet.active {
+                transform: translateY(0);
+            }
+
+            .sheet-handle-wrap {
+                padding: 12px 0;
+                display: flex;
+                justify-content: center;
+                cursor: pointer;
+            }
+
+            .sheet-handle {
+                width: 36px;
+                height: 4px;
+                background: #dadce0;
+                border-radius: 2px;
+            }
+
+            .explore-content {
+                padding: 0 20px 10px 20px;
+            }
+
+            .explore-title {
+                font-size: 22px;
+                font-weight: 500;
+                color: #202124;
+                margin-bottom: 16px;
+            }
+
+            .category-chips {
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            .category-chips::-webkit-scrollbar { display: none; }
+
+            .chip {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                min-width: 72px;
+                cursor: pointer;
+            }
+
+            .chip-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #f1f3f4;
+                border: 1px solid #e8eaed;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #1a73e8;
+                font-size: 16px;
+            }
+
+            .chip-text {
+                font-size: 12px;
+                color: #3c4043;
+                font-weight: 500;
+            }
+
+            @media (max-width: 768px) {
+                .mobile-bottom-sheet {
+                    display: block;
+                }
+                .top-right-controls {
+                    top: 72px;
+                }
+                .bottom-right-controls {
+                    bottom: 120px;
+                }
+            }
     </style>
 </head>
 <body>
@@ -298,32 +391,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d15843.34861652759!2d106.82271665!3d-6.1753924!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sid!4v1710925200000!5m2!1sen!2sid" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
 
-    <div class="search-container-box">
-        <div class="menu-btn">
-            <i class="fas fa-bars"></i>
-        </div>
-        <input type="text" class="search-input" placeholder="Telusuri Google Maps" value="Jakarta, Indonesia">
-        <div class="search-actions">
-            <div class="action-icon"><i class="fas fa-search"></i></div>
-            <div class="divider"></div>
-            <div class="action-icon blue"><i class="fas fa-directions"></i></div>
-        </div>
-    </div>
+    <!-- Search box dan controls lainnya ... -->
 
-    <div class="top-right-controls">
-        <div class="map-layer-btn">
-            <i class="fas fa-layer-group"></i>
+    <div class="mobile-bottom-sheet" id="bottomSheet">
+        <div class="sheet-handle-wrap">
+            <div class="sheet-handle"></div>
         </div>
-        <div class="profile-avatar">S</div>
-    </div>
-
-    <div class="bottom-right-controls">
-        <div class="floating-btn">
-            <i class="fas fa-crosshairs"></i>
-        </div>
-        <div class="zoom-group">
-            <button class="zoom-btn"><i class="fas fa-plus"></i></button>
-            <button class="zoom-btn"><i class="fas fa-minus"></i></button>
+        <div class="explore-content">
+            <h2 class="explore-title">Jelajahi sekitar</h2>
+            <div class="category-chips">
+                <div class="chip">
+                    <div class="chip-icon"><i class="fas fa-utensils"></i></div>
+                    <span class="chip-text">Restoran</span>
+                </div>
+                <div class="chip">
+                    <div class="chip-icon"><i class="fas fa-gas-pump"></i></div>
+                    <span class="chip-text">SPBU</span>
+                </div>
+                <div class="chip">
+                    <div class="chip-icon"><i class="fas fa-coffee"></i></div>
+                    <span class="chip-text">Kopi</span>
+                </div>
+                <div class="chip">
+                    <div class="chip-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <span class="chip-text">Belanja</span>
+                </div>
+                <div class="chip">
+                    <div class="chip-icon"><i class="fas fa-hotel"></i></div>
+                    <span class="chip-text">Hotel</span>
+                </div>
+            </div>
         </div>
     </div>
 </body>
