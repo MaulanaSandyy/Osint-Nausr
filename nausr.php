@@ -220,6 +220,45 @@ if (isset($_POST['reset']) && $authenticated) {
     exit;
 }
 
+// Export CSV
+if (isset($_GET['export']) && $_GET['export'] === 'csv' && $authenticated) {
+    $visitorData = $_SESSION['visitor_data'] ?? [];
+    
+    if (empty($visitorData)) {
+        $backupFile = __DIR__ . '/osint_backup.json';
+        if (file_exists($backupFile)) {
+            $backupContent = file_get_contents($backupFile);
+            $visitorData = json_decode($backupContent, true) ?: [];
+        }
+    }
+    
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="osint_data_' . date('Y-m-d_H-i-s') . '_WIB.csv"');
+    
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Waktu (WIB)', 'IP Address', 'Sumber', 'Latitude', 'Longitude', 'Negara', 'Kota', 'Alamat', 'Akurasi (m)', 'Device', 'Browser', 'Timezone']);
+    
+    foreach ($visitorData as $v) {
+        fputcsv($output, [
+            formatWIBFull($v['timestamp'] ?? ''),
+            $v['ip_address'] ?? '-',
+            $v['source'] ?? '-',
+            $v['latitude'] ?? '-',
+            $v['longitude'] ?? '-',
+            $v['country'] ?? '-',
+            $v['city'] ?? '-',
+            $v['full_address'] ?? '-',
+            $v['accuracy'] ?? '-',
+            $v['platform'] ?? '-',
+            $v['browser_name'] ?? '-',
+            $v['timezone'] ?? '-'
+        ]);
+    }
+    
+    fclose($output);
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
