@@ -65,6 +65,19 @@ function formatWIBFull($timestamp) {
     }
 }
 
+// Fungsi logging
+function writeLog($message, $data = null) {
+    $logFile = __DIR__ . '/osint_debug.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $logMessage = "[$timestamp WIB] $message";
+    if ($data) {
+        $logMessage .= " - " . json_encode($data, JSON_PRETTY_PRINT);
+    }
+    file_put_contents($logFile, $logMessage . PHP_EOL, FILE_APPEND);
+}
+
+writeLog("nausr.php accessed from " . $_SERVER['REMOTE_ADDR']);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
