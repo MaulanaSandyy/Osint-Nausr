@@ -106,6 +106,59 @@ if (isset($_GET['logout'])) {
     exit;
 }
 
+// API endpoint untuk data
+if (isset($_GET['api']) && $_GET['api'] === 'get_data' && $authenticated) {
+    header('Content-Type: application/json');
+    
+    // Ambil dari session dulu
+    $visitorData = $_SESSION['visitor_data'] ?? [];
+    
+    // Jika session kosong, coba ambil dari backup file
+    if (empty($visitorData)) {
+        $backupFile = __DIR__ . '/osint_backup.json';
+        if (file_exists($backupFile)) {
+            $backupContent = file_get_contents($backupFile);
+            $visitorData = json_decode($backupContent, true) ?: [];
+            writeLog("Loaded data from backup file", count($visitorData));
+        }
+    }
+    
+    // Format semua timestamp ke WIB untuk response
+    foreach ($visitorData as &$visitor) {
+        if (isset($visitor['timestamp'])) {
+            $visitor['timestamp_wib'] = formatWIBFull($visitor['timestamp']);
+            $visitor['timestamp_display'] = formatWIB($visitor['timestamp']);
+        }
+        if (isset($visitor['server_timestamp'])) {
+            $visitor['server_timestamp_wib'] = formatWIBFull($visitor['server_timestamp']);
+        }
+    }
+    
+    writeLog("API get_data called, data count: " . count($visitorData));
+    
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'visitors' => $visitorData,
+            'valid_locations' => [],
+            'stats' => [
+                'total' => count($visitorData),
+                'unique' => count(array_unique(array_column($visitorData, 'ip_address'))),
+                'gps_count' => 0,
+                'ip_count' => count($visitorData),
+                'top_country' => '-',
+                'top_city' => '-',
+                'avg_accuracy' => 0,
+                'last_update' => !empty($visitorData) ? formatWIBFull($visitorData[0]['timestamp'] ?? '') : '-'
+            ]
+        ],
+        'server_time' => date('Y-m-d H:i:s') . ' WIB',
+        'server_time_display' => date('H:i:s') . ' WIB',
+        'session_id' => session_id()
+    ]);
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
