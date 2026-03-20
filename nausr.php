@@ -867,7 +867,58 @@ $topCity = $cities ? array_key_first($cities) : '-';
                 
                 container.innerHTML = html;
             }
-            </script>
+            // Update debug log
+            function updateDebugLog(total, gpsCount, avgAccuracy, topCity, topCountry) {
+                const now = new Date();
+                const waktu = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+                
+                const debugLog = document.getElementById('debug-log');
+                if (debugLog) {
+                    let html = `<div class="mb-1"><span class="text-blue-400">root@osint-core:~#</span> ./status_check.sh</div>`;
+                    html += `<div><span class="text-slate-500">[${waktu} WIB]</span> <span class="text-white">SYS_INFO:</span> Session validated</div>`;
+                    html += `<div><span class="text-slate-500">[${waktu} WIB]</span> <span class="text-white">MEM_CHECK:</span> ${total} target vectors loaded</div>`;
+                    html += `<div><span class="text-slate-500">[${waktu} WIB]</span> <span class="text-white">GPS_ACC:</span> Rata-rata akurasi <span class="text-brand-400">${avgAccuracy > 0 ? '±' + avgAccuracy + 'm' : 'N/A'}</span></div>`;
+                    html += `<div><span class="text-slate-500">[${waktu} WIB]</span> <span class="text-white">GEO_STATS:</span> Top location: <span class="text-brand-400">${topCity || '-'}</span>, <span class="text-brand-400">${topCountry || '-'}</span></div>`;
+                    html += `<div class="mt-2"><span class="text-brand-500 bg-brand-500/20 animate-pulse px-1">_</span></div>`;
+                    debugLog.innerHTML = html;
+                }
+            }
+
+            // Delete data
+            async function deleteData(index) {
+                if (!confirm('Delete this record?')) return;
+                
+                const formData = new FormData();
+                formData.append('delete', index);
+                
+                const response = await fetch('nausr.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    fetchData();
+                }
+            }
+
+            // Reset all data
+            async function resetData() {
+                if (!confirm('⚠️ Delete ALL intelligence data? This action cannot be undone.')) return;
+                
+                const formData = new FormData();
+                formData.append('reset', '1');
+                
+                const response = await fetch('nausr.php', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    fetchData();
+                }
+            }
+
+            // Show notification (simple console)
+            function showNotification(message, type = 'success') {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+        </script>
 
 </body>
 </html>
