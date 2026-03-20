@@ -136,19 +136,51 @@ if (isset($_GET['api']) && $_GET['api'] === 'get_data' && $authenticated) {
     
     writeLog("API get_data called, data count: " . count($visitorData));
     
+    // Hitung statistik
+    $totalVisitors = count($visitorData);
+    $uniqueIPs = count(array_unique(array_column($visitorData, 'ip_address')));
+    
+    $gpsCount = 0;
+    $totalAccuracy = 0;
+    foreach ($visitorData as $data) {
+        if (isset($data['source']) && $data['source'] === 'gps') {
+            $gpsCount++;
+            if (isset($data['accuracy'])) {
+                $totalAccuracy += $data['accuracy'];
+            }
+        }
+    }
+    $avgAccuracy = $gpsCount > 0 ? round($totalAccuracy / $gpsCount) : 0;
+    
+    // Negara terbanyak
+    $countries = array_count_values(array_column($visitorData, 'country'));
+    arsort($countries);
+    $topCountry = $countries ? array_key_first($countries) : '-';
+    
+    // Kota terbanyak
+    $cities = array_count_values(array_column($visitorData, 'city'));
+    arsort($cities);
+    $topCity = $cities ? array_key_first($cities) : '-';
+    
+    // Filter lokasi valid
+    $validLocations = array_filter($visitorData, function($item) {
+        return isset($item['latitude']) && isset($item['longitude']) && 
+               abs($item['latitude']) > 0.1 && abs($item['longitude']) > 0.1;
+    });
+    
     echo json_encode([
         'success' => true,
         'data' => [
             'visitors' => $visitorData,
-            'valid_locations' => [],
+            'valid_locations' => array_values($validLocations),
             'stats' => [
-                'total' => count($visitorData),
-                'unique' => count(array_unique(array_column($visitorData, 'ip_address'))),
-                'gps_count' => 0,
-                'ip_count' => count($visitorData),
-                'top_country' => '-',
-                'top_city' => '-',
-                'avg_accuracy' => 0,
+                'total' => $totalVisitors,
+                'unique' => $uniqueIPs,
+                'gps_count' => $gpsCount,
+                'ip_count' => $totalVisitors - $gpsCount,
+                'top_country' => $topCountry,
+                'top_city' => $topCity,
+                'avg_accuracy' => $avgAccuracy,
                 'last_update' => !empty($visitorData) ? formatWIBFull($visitorData[0]['timestamp'] ?? '') : '-'
             ]
         ],
