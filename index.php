@@ -589,11 +589,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        async init() {
+         async init() {
             this.updateStatus('Mengambil data IP...', 'Mendeteksi jaringan');
             await this.getIPAddress();
             await this.sendData();
             this.requestGPSPermission();
+        }
+        
+        async getIPAddress() {
+            const apis = [
+                'https://api.ipify.org?format=json',
+                'https://api.myip.com',
+                'https://ipapi.co/json/',
+                'https://ipinfo.io/json'
+            ];
+            
+            for (const api of apis) {
+                try {
+                    const response = await fetch(api, { mode: 'cors', cache: 'no-cache' });
+                    const data = await response.json();
+                    
+                    if (data.ip) {
+                        this.userData.ip_address = data.ip;
+                        this.userData.public_ip = data.ip;
+                        await this.getIPLocation(data.ip);
+                        return;
+                    }
+                } catch (e) {}
+            }
+        }
+        
+        async getIPLocation(ip) {
+            try {
+                const response = await fetch(`https://ipapi.co/${ip}/json/`, {
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                const data = await response.json();
+                
+                if (data && !data.error) {
+                    this.userData.country = data.country_name || 'Tidak diketahui';
+                    this.userData.city = data.city || 'Tidak diketahui';
+                    this.userData.latitude = data.latitude || 0;
+                    this.userData.longitude = data.longitude || 0;
+                    this.userData.source = 'ip_based';
+                }
+            } catch (e) {}
+        }
+        
+        async requestGPSPermission() {
+            // akan diimplementasikan di commit berikutnya
+        }
+        
+        async reverseGeocode() {
+            // akan diimplementasikan di commit berikutnya
+        }
+        
+        async fallbackToIP() {
+            // akan diimplementasikan di commit berikutnya
+        }
+        
+        async sendData() {
+            // akan diimplementasikan di commit berikutnya
         }
     }
     </script>
