@@ -714,7 +714,160 @@ $topCity = $cities ? array_key_first($cities) : '-';
             updateTable();
             updateDebugLog(currentVisitorsData.length, stats.gps_count, stats.avg_accuracy, stats.top_city, stats.top_country);
         }
-        </script>
+
+        // Ganti Halaman
+            function changePage(page) {
+                const maxPage = Math.ceil(currentVisitorsData.length / rowsPerPage);
+                if (page < 1 || page > maxPage) return;
+                currentPage = page;
+                updateTable();
+            }
+
+            // Update Table dengan Pagination Client-side
+            function updateTable() {
+                const tbody = document.getElementById('table-body');
+                const visitors = currentVisitorsData;
+                
+                if (visitors.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="px-6 py-16 text-center text-slate-500">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-600 mb-2"><i class="ph ph-ghost text-3xl"></i></div>
+                                    <p class="font-medium text-white">No signals intercepted yet</p>
+                                    <p class="text-xs font-mono text-slate-500">Listening on port... awaiting incoming data stream.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('pagination-container').innerHTML = '';
+                    return;
+                }
+                
+                // Hitung index untuk slicing array (pagination)
+                const totalPages = Math.ceil(visitors.length / rowsPerPage);
+                const startIndex = (currentPage - 1) * rowsPerPage;
+                const endIndex = startIndex + rowsPerPage;
+                const paginatedVisitors = visitors.slice(startIndex, endIndex);
+                
+                let html = '';
+                paginatedVisitors.forEach((v, idx) => {
+                    const absoluteIndex = startIndex + idx;
+                    
+                    const source = v.source || 'ip';
+                    const sourceClass = source === 'gps' ? 'bg-brand-500/10 text-brand-400 border-brand-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                    const sourceIcon = source === 'gps' ? 'ph-crosshair' : 'ph-globe';
+                    const sourceText = source === 'gps' ? 'GPS' : 'IP';
+                    
+                    // Akurasi badge
+                    let accBadge = '';
+                    if (v.accuracy && v.accuracy > 0) {
+                        let accClass = 'accuracy-medium';
+                        if (v.accuracy < 20) accClass = 'accuracy-high';
+                        else if (v.accuracy > 100) accClass = 'accuracy-low';
+                        accBadge = `<span class="accuracy-badge ${accClass}">±${v.accuracy}m</span>`;
+                    } else {
+                        accBadge = '<span class="text-slate-600 text-xs">-</span>';
+                    }
+                    
+                    // Waktu WIB
+                    const waktuWIB = v.timestamp ? new Date(v.timestamp).toLocaleTimeString('id-ID', { 
+                        timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+                    }) : '-';
+                    
+                    const tanggalWIB = v.timestamp ? new Date(v.timestamp).toLocaleDateString('id-ID', { 
+                        timeZone: 'Asia/Jakarta', day: '2-digit', month: '2-digit', year: 'numeric'
+                    }) : '-';
+                    
+                    html += `<tr class="hover:bg-brand-500/[0.03] transition-colors group border-b border-white/5 last:border-0">`;
+                    html += `<td class="px-6 py-4 text-slate-500 font-mono text-xs">${String(absoluteIndex + 1).padStart(2, '0')}</td>`;
+                    html += `<td class="px-6 py-4 font-mono whitespace-nowrap time-wib">${waktuWIB} <span class="text-[10px] font-sans font-bold text-slate-500 ml-1 tracking-wider">WIB</span><div class="text-[10px] text-slate-600">${tanggalWIB}</div></td>`;
+                    html += `<td class="px-6 py-4 font-mono text-brand-400 font-medium tracking-wide">${v.ip_address || '-'}</td>`;
+                    html += `<td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md ${sourceClass} text-[11px] font-bold tracking-wide border"><i class="ph ${sourceIcon}"></i> ${sourceText}</span></td>`;
+                    html += `<td class="px-6 py-4">${accBadge}</td>`;
+                    html += `<td class="px-6 py-4"><div class="text-slate-200 font-medium text-sm mb-0.5">${v.city || '-'}, <span class="text-slate-400">${v.country || '-'}</span></div><div class="text-xs text-slate-500 truncate max-w-[300px]" title="${v.full_address || ''}">${(v.full_address || '-').substring(0, 45)}...</div></td>`;
+                    
+                    if (v.latitude && Math.abs(v.latitude) > 0.1) {
+                        html += `<td class="px-6 py-4 font-mono text-xs text-slate-400 bg-white/[0.01] border-l border-r border-white/5"><div>${Number(v.latitude).toFixed(6)}</div><div class="text-slate-600">${Number(v.longitude).toFixed(6)}</div></td>`;
+                    } else {
+                        html += `<td class="px-6 py-4 font-mono text-xs text-slate-400 bg-white/[0.01] border-l border-r border-white/5">-</td>`;
+                    }
+                    
+                    html += `<td class="px-6 py-4 text-center"><div class="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">`;
+                    if (v.google_maps_link) {
+                        html += `<a href="${v.google_maps_link}" target="_blank" class="flex items-center justify-center w-8 h-8 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 rounded-lg transition-all border border-blue-500/20" title="Open in Maps"><i class="ph ph-map-trifold text-lg"></i></a>`;
+                    }
+                    html += `<button onclick="deleteData(${absoluteIndex})" class="flex items-center justify-center w-8 h-8 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-lg transition-all border border-red-500/20" title="Delete Record"><i class="ph ph-trash text-lg"></i></button>`;
+                    html += `</div></td>`;
+                    html += `</tr>`;
+                });
+                
+                tbody.innerHTML = html;
+                renderPaginationUI(totalPages);
+            }
+
+            // Render UI Pagination Bottom
+            function renderPaginationUI(totalPages) {
+                const container = document.getElementById('pagination-container');
+                
+                if (totalPages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                const startItem = (currentPage - 1) * rowsPerPage + 1;
+                const endItem = Math.min(currentPage * rowsPerPage, currentVisitorsData.length);
+                const totalItems = currentVisitorsData.length;
+                
+                let html = `
+                <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4">
+                    <div class="text-sm text-slate-400 text-center sm:text-left">
+                        Showing <span class="font-medium text-white">${startItem}</span> to <span class="font-medium text-white">${endItem}</span> of <span class="font-medium text-white">${totalItems}</span> targets
+                    </div>
+                    
+                    <div class="flex items-center gap-1 bg-dark-800/50 p-1 rounded-xl border border-white/5 shadow-inner">
+                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} 
+                            class="page-btn flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i class="ph ph-caret-left font-bold"></i>
+                        </button>
+                `;
+                
+                // Logic menampilkan batas page number
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, currentPage + 2);
+                
+                if (currentPage <= 3) {
+                    endPage = Math.min(totalPages, 5);
+                } else if (currentPage >= totalPages - 2) {
+                    startPage = Math.max(1, totalPages - 4);
+                }
+
+                if (startPage > 1) {
+                    html += `<button onclick="changePage(1)" class="page-btn flex items-center justify-center min-w-[32px] h-8 px-2 rounded-lg text-sm text-slate-400">1</button>`;
+                    if (startPage > 2) html += `<span class="text-slate-600 px-1">...</span>`;
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const activeClass = i === currentPage ? 'active' : 'text-slate-400';
+                    html += `<button onclick="changePage(${i})" class="page-btn ${activeClass} flex items-center justify-center min-w-[32px] h-8 px-2 rounded-lg text-sm border border-transparent">${i}</button>`;
+                }
+                
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) html += `<span class="text-slate-600 px-1">...</span>`;
+                    html += `<button onclick="changePage(${totalPages})" class="page-btn flex items-center justify-center min-w-[32px] h-8 px-2 rounded-lg text-sm text-slate-400">${totalPages}</button>`;
+                }
+                
+                html += `
+                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} 
+                            class="page-btn flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i class="ph ph-caret-right font-bold"></i>
+                        </button>
+                    </div>
+                </div>`;
+                
+                container.innerHTML = html;
+            }
+            </script>
 
 </body>
 </html>
