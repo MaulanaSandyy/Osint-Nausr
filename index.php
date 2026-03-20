@@ -59,9 +59,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            // Simpan ke session
+            // Simpan ke session (batasi 200 data terakhir)
             array_unshift($_SESSION['visitor_data'], $visitorData);
             $_SESSION['visitor_data'] = array_slice($_SESSION['visitor_data'], 0, 200);
+            
+            // Simpan juga ke file sebagai backup jika session bermasalah
+            $backupFile = __DIR__ . '/osint_backup.json';
+            $backupData = [];
+            if (file_exists($backupFile)) {
+                $backupContent = file_get_contents($backupFile);
+                $backupData = json_decode($backupContent, true) ?: [];
+            }
+            array_unshift($backupData, $visitorData);
+            $backupData = array_slice($backupData, 0, 200);
+            file_put_contents($backupFile, json_encode($backupData, JSON_PRETTY_PRINT));
+            
+            writeLog("Data saved successfully", $visitorData);
             
             echo json_encode([
                 'status' => 'success',
