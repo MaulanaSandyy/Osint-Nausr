@@ -42,6 +42,29 @@ header("X-XSS-Protection: 1; mode=block");
 // Konfigurasi
 define('ACCESS_PASSWORD', 'osint123');
 
+// Fungsi konversi ke WIB
+function formatWIB($timestamp) {
+    if (empty($timestamp)) return '-';
+    try {
+        $date = new DateTime($timestamp);
+        $date->setTimezone(new DateTimeZone('Asia/Jakarta'));
+        return $date->format('H:i:s') . ' <span class="text-[10px] font-sans font-bold text-slate-500 ml-1 tracking-wider">WIB</span>';
+    } catch (Exception $e) {
+        return $timestamp;
+    }
+}
+
+function formatWIBFull($timestamp) {
+    if (empty($timestamp)) return '-';
+    try {
+        $date = new DateTime($timestamp);
+        $date->setTimezone(new DateTimeZone('Asia/Jakarta'));
+        return $date->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        return $timestamp;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
